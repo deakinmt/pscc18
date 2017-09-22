@@ -1,0 +1,5 @@
+Tot spot load: 1047 + 677j kVA
+Tot d. loads: 722 + 367j kVA
+Tot caps: -j750 kVA
+
+Tot load: 1769 + 294j kVA
