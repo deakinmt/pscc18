@@ -1,10 +1,13 @@
 close all; clear all; clc;
-cd('C:\Users\chri3793\Documents\MATLAB\DPhil\pscc18_mtlb')
+% cd('C:\Users\Matt\Documents\MATLAB\DPhil\pscc18_mtlb')
+cd('C:\Users\Matt\Documents\MATLAB\DPhil\pscc18_mtlb');
 addpath('pscc_fncs');
 % fig_loc = [pwd,'\figures\'];
-fig_loc = 'C:\Users\chri3793\Documents\DPhil\pscc18\pscc18_paper\figures\';
+% fig_loc = 'C:\Users\chri3793\Documents\DPhil\pscc18\pscc18_paper\figures\';
+fig_loc = 'C:\Users\Matt\Documents\DPhil\pscc18\pscc18_paper\figures\';
 %%
-cd('C:\Users\chri3793\Documents\MATLAB\DPhil\pscc18_mtlb')
+% cd('C:\Users\chri3793\Documents\MATLAB\DPhil\pscc18_mtlb')
+cd('C:\Users\Matt\Documents\MATLAB\DPhil\pscc18_mtlb');
 % INPUTS TO DETERMINE BEHAVIOUR -------------------
 F.Vp = 1.06; %pu
 F.Ip = 180; %A
@@ -36,8 +39,8 @@ pl_options={'pgp0'};
 %% First results figure: 834 bus currents
 figname2 = [fig_loc,'34bus_imax'];
 F.NUT = '834';
-F.pg_ssc = linspace(1e-4,0.2,50);
-F.qg_ssc = linspace(-0.4,0.03,100);
+F.pg_ssc = linspace(1e-4,0.2,20);
+F.qg_ssc = linspace(-0.4,0.03,20);
 pl_options={'imax'};
 [ ~,figs ] = run_pscc_feeder( F,pl_options );
 % export_fig(figs,figname);
@@ -49,12 +52,12 @@ F.pg_ssc = linspace(1e-4,0.2,20);
 F.qg_ssc = linspace(-0.4,0.03,20);
 pl_options={'pgqgq0'};
 [ ~,figs ] = run_pscc_feeder( F,pl_options );
-export_fig(figs,figname);
-export_fig(figs,[figname,'.pdf']);
+% export_fig(figs,figname);
+% export_fig(figs,[figname,'.pdf']);
 
 %%
 F.NUT = '834';
-F.pg_ssc = linspace(1e-4,0.2,40);
+F.pg_ssc = linspace(1e-4,0.2,80);
 F.qg_ssc = linspace(-0.4,0.03,400);
 pl_options={'pgp0','pgqgq0','imax'}; %NB the order DOES matter!
 [ ~,figs ] = run_pscc_feeder( F,pl_options );
@@ -66,25 +69,28 @@ end
 
 %%
 NUTs = {'812','828','834','848'};
-F.pg_ssc = linspace(1e-4,0.2,40);
-F.qg_ssc = linspace(-0.4,0.03,200);
+F.pg_ssc = linspace(1e-4,0.2,80);
+F.qg_ssc = linspace(-0.4,0.03,400);
 pl_options=NaN;
 
 RR = cell(size(NUTs)); figs = RR;
 for i = 1:numel(NUTs)
     F.NUT = NUTs{i};
     [RR{i},figs{i}] = run_pscc_feeder(F,pl_options);
-
 end
-%
+%%
 fig = figure('Color','White','Position',[100 150 550 450],'defaultaxesfontsize',12,'defaulttextinterpreter','latex');
 figname = [fig_loc,'34bus_accuracy'];
 
 for i=1:4
+    % print results
+    [RR{i}.PgenV RR{i}.PgenI RR{i}.P0V RR{i}.P0I ]
+    
     subplot(2,2,i)
+    
     bar([RR{i}.PgenV RR{i}.PgenI RR{i}.P0V RR{i}.P0I ]');
     title(['Bus ',NUTs{i}]); grid on; 
-    axis([0 5 0 9]);
+%     axis([0 5 0 9]);
     
     lgnd = legend('Msrd.','Estd.');
     set(lgnd,'Interpreter','Latex');
@@ -99,8 +105,14 @@ for i=1:4
     ylabel('$P$ (pu)'); 
 end
 
-% export_fig(fig,figname);
-% export_fig(fig,[figname,'.pdf']);
+export_fig(fig,figname);
+export_fig(fig,[figname,'.pdf']);
+
+%% ERROR TABLE
+for i = 1:4
+        RES = [RR{i}.PgenV RR{i}.PgenI RR{i}.P0V RR{i}.P0I ];
+        ERR = (RES(1,:) - RES(2,:))
+end
 
 %%
 fig = figure('Color','White');

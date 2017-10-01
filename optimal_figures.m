@@ -4,15 +4,14 @@
 clear all; close all; 
 % cd('C:\Users\Matt\Documents\MATLAB\DPhil\psjul17_mtlb\psjul_figs');
 % fig_loc = 'C:\Users\Matt\Documents\DPhil\psjul17\figures';
-cd('C:\Users\chri3793\Documents\MATLAB\DPhil\psjul17_mtlb\psjul_figs');
-fig_loc = 'C:\Users\chri3793\Documents\DPhil\psjul17\figures';
+fig_loc = 'C:\Users\Matt\Documents\DPhil\pscc18\pscc18_paper\figures';
 
 set(0,'defaulttextinterpreter','latex');
 set(0,'defaultaxesfontsize',12);
 fig_nompos = [100 100 550 320];
 
 %%
-Vg = 1.1;
+Vg = 1.06;
 v0_lin = linspace(0.9,1.2,300);
 
 theta = linspace(0.003,(pi/2) - 0.0006,1000);
@@ -21,7 +20,6 @@ lz_lin = cot(theta); % lambda
 lv_lin = Vg./v0_lin;
 nu_lin = 1./lv_lin;
 
-%[lz,lv] = meshgrid(lz_lin,lv_lin);
 [lz,nu] = meshgrid(lz_lin,nu_lin);
 lv = 1./nu;
 V0 = Vg./lv;
@@ -80,7 +78,7 @@ grid on;
 
 % export_fig(gcf,fig_name);
 % export_fig(gcf,strcat(fig_name,'.pdf'),'-dpdf');
-%%
+%% mgtt_p0_stb
 fig_name = strcat(fig_loc,'\mgtt_p0_stb');
 
 figure('Color','White','Position',fig_nompos);
@@ -101,7 +99,7 @@ grid on;
 %% mgtt_eta
 figure('Color','White','Position',fig_nompos);
 fig_name = strcat(fig_loc,'\mgtt_eta');
-[c_con,~] = contour(lz,V0,eta,(0:0.1:1));
+[c_con,~] = contour(lz,V0,eta,(-1:0.1:1)); % ,(0:0.1:1)
 set(gca,'xscale','log');
 clabel(c_con,[0 0.2 0.4 0.6 0.8 0.9]); grid on;
 
@@ -127,7 +125,7 @@ xlabel('$\lambda = R/X$ '); ylabel('$V_{0}$ (p.u.)');
 lgnd = legend('$\frac{P_{g}''}{|S_{g}''|}$');
 set(lgnd,'FontSize',18,'Interpreter','Latex','Location','NorthWest');
 %title('Generator power factor at maximum power transfer ($|V_{g}| = 1.1$)'); 
-
+% 
 % export_fig(gcf,fig_name);
 % export_fig(gcf,strcat(fig_name,'.pdf'),'-dpdf');
 %% mgtt_pf_0

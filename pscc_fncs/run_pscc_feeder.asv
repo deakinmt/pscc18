@@ -168,45 +168,6 @@ RR.Sload = Sload; %in pu
 figs = [];
 % possible: check v_comparison pgp0 pgqgq0 plosses qlosses p_d_losses
 %           q_d_losses pgp0s0 vmaxmin v_comparison_lin
-DAFS = 14;
-
-if sum(ismember(pl_options,'pgp0'))  || sum(ismember(pl_options,'0'))
-    figs = [figs;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];
-    plot(Pgenmat(Vmn),Vmax_pwr,'x-'); grid on; hold on;
-    plot(PgenV,P0);
-
-    xlabel('$P_{gen}$ (pu)');
-    ylabel('$P_{0}^{Sub}$ (pu)');
-    lgnd=legend('Msrd.','Estd., (5)','Location','SouthEast');
-    set(lgnd,'interpreter','latex');
-    axis equal;
-end
-if sum(ismember(pl_options,'pgqgq0')) || sum(ismember(pl_options,'0'))
-    figs = [figs;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];
-    plot(Pgenmat(Vmn),Qgenmat(Vmn),'x-','Color',[0.3 0.3 0.3]); hold on; grid on;
-    plot(PgenV,imag(Sg + Sload),'k');
-    plot(Pgenmat(Vmn),imag(TotPwr(Vmn)),'x-','Color',[1.0 0.5 0.5]); hold on;
-    plot(PgenV,Q0,'r');
-
-    lgnd = legend('$Q_{gen}$ msrd.','$Q_{gen}$ estd.','$Q_{comp}$ msrd.','$Q_{comp}$ estd.');
-    set(lgnd,'Interpreter','Latex');
-    xlabel('$P_{gen}$ (pu)'); ylabel('$Q$ (pu)'); axis equal;
-end
-if sum(ismember(pl_options,'imax')) || sum(ismember(pl_options,'0'))
-    figs = [figs;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];%
-    plot(Pgenmat(Vmn),ImaxMat(Vmn),'x-'); grid on; hold on;
-    plot(PgenV,Iest); grid on; hold on;
-    xs = axis;
-    plot(xs(1:2),[1 1]*FF.Ip,'k--');
-    plot([1 1]*Pgen_measV,xs(3:4),'k:');
-    plot([1 1]*Pgen_measI,xs(3:4),'k-.');
-    lgnd = legend('Max $I$, msrd.','$I_{g}$, estd.','$I_{+}$','$P_{g}''$, msrd.','$\hat{P}_{g}''$, msrd.','Location','NorthWest');
-    set(lgnd,'Interpreter','Latex');
-    xlabel('$P_{gen}$ (pu)'); ylabel('$|I|$ (A)');
-end
-
-
-
 
 if sum(ismember(pl_options,'check')) || sum(ismember(pl_options,'0'))
     figs = [figs;figure('Color','White')];
@@ -227,6 +188,32 @@ if sum(ismember(pl_options,'v_comparison')) || sum(ismember(pl_options,'0'))
     subplot(224)
     [cc,~]=contourf(Pgenmat,Qgenmat,100*(Vg-VmaxMat));
     clabel(cc); %axis equal;
+end
+if sum(ismember(pl_options,'pgp0'))  || sum(ismember(pl_options,'0'))
+    figs = [figs;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',12,'defaulttextinterpreter','latex')];
+    
+    set(figs,'defaulttextinterpreter','latex');
+    set(figs,'defaultaxesfontsize',12);
+
+    plot(Pgenmat(Vmn),Vmax_pwr,'x-'); grid on; hold on;
+    plot(PgenV,P0);
+
+    xlabel('$P_{gen}$ (pu)');
+    ylabel('$P_{0}^{Sub}$ (pu)');
+    lgnd=legend('Msrd.','Estd., (5)','Location','SouthEast');
+    set(lgnd,'interpreter','latex');
+    axis equal;
+end
+if sum(ismember(pl_options,'pgqgq0')) || sum(ismember(pl_options,'0'))
+    figs = [figs;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',12,'defaulttextinterpreter','latex')];
+    plot(Pgenmat(Vmn),Qgenmat(Vmn),'x-','Color',[0.3 0.3 0.3]); hold on; grid on;
+    plot(PgenV,imag(Sg + Sload),'k');
+    plot(Pgenmat(Vmn),imag(TotPwr(Vmn)),'x-','Color',[1.0 0.5 0.5]); hold on;
+    plot(PgenV,Q0,'r');
+
+    lgnd = legend('$Q_{gen}$ msrd.','$Q_{gen}$ estd.','$Q_{comp}$ msrd.','$Q_{comp}$ estd.');
+    set(lgnd,'Interpreter','Latex');
+    xlabel('$P_{gen}$ (pu)'); ylabel('$Q$ (pu)'); axis equal;
 end
 if sum(ismember(pl_options,'plosses')) || sum(ismember(pl_options,'0'))
     figs = [figs;figure('Color','White','Position',[300 200 600 600])];
@@ -275,7 +262,20 @@ if sum(ismember(pl_options,'vmaxmin')) || sum(ismember(pl_options,'0'))
     xlabel('Pg (pu)');
     ylabel('|V| (pu)');
 end
-
+if sum(ismember(pl_options,'imax')) || sum(ismember(pl_options,'0'))
+    figs = [figs;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',12,'defaulttextinterpreter','latex')];%
+    plot(Pgenmat(Vmn),ImaxMat(Vmn),'x-'); grid on; hold on;
+    plot(PgenV,Iest); grid on; hold on;
+    xs = axis;
+    plot(xs(1:2),[1 1]*FF.Ip,'k--');
+    plot([1 1]*Pgen_measV,xs(3:4),'k:');
+    plot([1 1]*Pgen_measI,xs(3:4),'k-.');
+    lgnd = legend('Max $I$, msrd.','$I_{g}$, estd.','$I_{+}$','$P_{g}''$, msrd','$\hat{P}_{g}''$, msrd','Location','NorthWest');
+    set(lgnd,'Interpreter','Latex');
+    xlabel('$P_{gen}$ (pu)'); ylabel('$|I|$ (A)');
+    Pgen_measV
+    Pgen_measI
+end
 
 
 
