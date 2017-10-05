@@ -21,7 +21,6 @@ F.qg_ssc = linspace(-0.4,0.03,20);
 F.SRC = 'SOURCEBUS';
 
 F.filename = '\opendss_models\34Bus\ieee34Mod1_fxd';
-F.elmpwr_fnm = [pwd,'\opendss_models\34Bus\ieee34-1_EXP_ElemPowers.csv'];
 F.feeder = '34bus'; % for calc_ww and T_ratios
 F.tr_buses = {{'888','832'};{'832','852'};{'850','814'};{'800','SOURCEBUS'}};
 F.fig_nompos = [200 150 450 340];
@@ -29,7 +28,7 @@ F.fig_nompos = [200 150 450 340];
 %% First results figure: 834 bus feeder voltage
 figname1 = [fig_loc,'34bus_pgp0'];
 F.NUT = '834';
-F.pg_ssc = linspace(-0.001,0.2,20);
+F.pg_ssc = linspace(0.001,0.2,20);
 F.qg_ssc = linspace(-0.4,0.03,20);
 pl_options={'pgp0'};
 [ ~,figs ] = run_pscc_feeder( F,pl_options );
@@ -71,6 +70,8 @@ end
 NUTs = {'812','828','834','848'};
 F.pg_ssc = linspace(1e-4,0.2,80);
 F.qg_ssc = linspace(-0.4,0.03,400);
+F.pg_ssc = linspace(0.001,0.2,20);
+F.qg_ssc = linspace(-0.4,0.03,20);
 pl_options=NaN;
 
 RR = cell(size(NUTs)); figs = RR;
@@ -83,36 +84,48 @@ fig = figure('Color','White','Position',[100 150 550 450],'defaultaxesfontsize',
 figname = [fig_loc,'34bus_accuracy'];
 
 for i=1:4
-    % print results
-    [RR{i}.PgenV RR{i}.PgenI RR{i}.P0V RR{i}.P0I ]
-    
+    rslt = [RR{i}.Pgen_prm RR{i}.Pgen_hat RR{i}.Psub_prm RR{i}.Psub_hat ]';
+
     subplot(2,2,i)
-    
-    bar([RR{i}.PgenV RR{i}.PgenI RR{i}.P0V RR{i}.P0I ]');
+    bar(rslt + 1);
     title(['Bus ',NUTs{i}]); grid on; 
-%     axis([0 5 0 9]);
-    
     lgnd = legend('Msrd.','Estd.');
     set(lgnd,'Interpreter','Latex');
 
-    Yticks = yticks;
-    for i = 1:numel(Yticks)
-        ytcks{i} = num2str(Yticks(i));
+
+    
+    Yticks = yticks; ytcks = cell(numel(yticks),1);
+    for j = 1:numel(Yticks)
+        ytcks{j} = num2str(Yticks(j));
     end
-    xtcks = {'$P_{gen}''$','$\hat{P}_{gen}$','$P_{0}''$','$\hat{P}_{0}$'};
-%     format_ticks(gca,xtcks,ytcks(1:i),[],[],[],[],[]);
+    xtcks = {'$P_{gen}''$','$\hat{P}_{gen}$','$P^{Sub \, \prime}_{0} $ ','$\hat{P}^{Sub}_{0}$'};
     format_ticks(gca,xtcks,[],[],[],[],[],[]);
-    ylabel('$P$ (pu)'); 
+    ylabel('$P$ (pu)');
+    axis([0.5 4.5 0 round(max(max(rslt)))+0.5]);    
 end
 
-export_fig(fig,figname);
-export_fig(fig,[figname,'.pdf']);
+% export_fig(fig,figname);
+% export_fig(fig,[figname,'.pdf']);
 
 %% ERROR TABLE
+clear input; clc;
+ERR = zeros(numel(NUTs),5);
 for i = 1:4
         RES = [RR{i}.PgenV RR{i}.PgenI RR{i}.P0V RR{i}.P0I ];
-        ERR = (RES(1,:) - RES(2,:))
+        ERR(i,1) = str2double(NUTs{i});
+        ERR(i,2:end) = (RES(1,:) - RES(2,:));
 end
+
+input.data = ERR;
+input.tableColLabels = {'Bus','$\epsilon (P_{gen}'')$','$\epsilon (\hat{P}_{gen})$',...
+                        '$\epsilon (P_{0}^{Sub \, \prime})$ ','$\epsilon (\hat{P}_{0}^{Sub})$  '    };
+input.dataFormat = {'%.0f',1,'%.2f',4}; % three digits precision for first two columns, one digit for the last                    
+input.tableColumnAlignment = 'l';
+input.booktabs = 1;
+input.tableCaption = 'Marginal and thermal power limit error (pu)';
+input.tableLabel = 'res_error';
+
+err_table = latexTable(input);
 
 %%
 fig = figure('Color','White');
