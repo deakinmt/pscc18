@@ -35,11 +35,11 @@ DSSText.Command='new monitor.genpq element=generator.gen terminal=1 mode=65 PPol
 [Pg, Qg] = meshgrid(Ssc*FF.pg_ssc,Ssc*FF.qg_ssc);
 Pf = sign(Qg).*Pg./sqrt(Pg.^2 + Qg.^2);
 
-totlss = zeros(numel(Pg),2); totpwr = zeros(numel(Pg),2);
-VmaxMes = zeros(numel(Pg),1); VminMes = zeros(numel(Pg),1);
+totpwr = zeros(numel(Pg),2);
+VmaxMes = zeros(numel(Pg),1); 
 ImaxMes = zeros(numel(Pg),1);
-
 DSSCircuit.Monitors.ResetAll;
+
 tic
 for i = 1:numel(Pg)
     DSSText.Command=strcat('edit generator.gen kw=',num2str(Pg(i)));
@@ -47,94 +47,76 @@ for i = 1:numel(Pg)
     DSSSolution.Solve;
     DSSCircuit.Sample;
     
-    [ I,~ ] = meas_pde_i( DSSCircuit );
-    ImaxMes(i) = max(max(abs(I)));
     AllBusVmagPu = DSSCircuit.AllBusVmagPu; 
     VmaxMes(i) = max(AllBusVmagPu);
-    VminMes(i) = min(AllBusVmagPu);
-    totlss(i,:) = 1e-3*DSSObj.ActiveCircuit.Losses/sb; %pu (output in W)
+    
+    [ I,~ ] = meas_pde_i( DSSCircuit ); %NB <= this is quite slow
+    ImaxMes(i) = max(max(abs(I)));
+
     totpwr(i,:) = DSSObj.ActiveCircuit.TotalPower/sb; %pu
 end
 toc
 
-ImaxMat = reshape(ImaxMes,size(Pg));
 VmaxMat = reshape(VmaxMes,size(Pg));
-VminMat = reshape(VminMes,size(Pg));
+ImaxMat = reshape(ImaxMes,size(Pg));
 
 DSSMon=DSSCircuit.Monitors; DSSMon.name='genpq';
 DSSText.Command='show monitor genpq';
 Pgen_lin = -ExtractMonitorData(DSSMon,1,1)/sb; %pu, +ve is generation
 Qgen_lin = -ExtractMonitorData(DSSMon,2,1)/sb; %pu, +ve is generation
 
-TotLss = reshape(totlss(:,1),size(Pg)) + 1i*reshape(totlss(:,2),size(Pg));% +ve implies losses
 TotPwr = reshape(totpwr(:,1),size(Pg)) + 1i*reshape(totpwr(:,2),size(Pg)); %-ve implies load
 
-Pgenmat=reshape(Pgen_lin,size(Pg));% - real(TotLd);
-Qgenmat=reshape(Qgen_lin,size(Pg));% - imag(TotLd);
-Sgenmat = Pgenmat+1i*Qgenmat;
+Pgenmat=reshape(Pgen_lin,size(Pg));
+Qgenmat=reshape(Qgen_lin,size(Pg));
 
-Vg2= V2_Sl_calc(Sgenmat - Sload,Z,V0,'p' );
-Vg = sqrt(Vg2);
-%%
-% calculate maximum power export s.t. voltage constraint:
+%% calculate maximum power export s.t. voltage + current constraints:
 VNaN_outs = 0./(VmaxMat<Vp);
 Vg_inV = VmaxMat + VNaN_outs; % remove numbers where the voltage is too high
 Vmn = (Vg_inV==max(Vg_inV));
 Vmax_pwr = max(real(TotPwr(Vmn)),[],2); % for each row, find the max power
 PgenV = Pgenmat(Vmn);
 
-% Vmax_pwr = max(real(TotPwr(Vg_in_mnV)),[],2); % for each row, find the max power
-% Vmn = find(real(TotPwr)==repmat(Vmax_pwr',numel(TotPwr)/numel(Vmax_pwr),1)); %find the index of these points
-% PgenV = Pgenmat(Vmn);
-
-% calculate maximum power export s.t. current:
-INaN_outs = 0./((ImaxMat<Ip).*(real(TotPwr)<Pp).*(VmaxMat<Vp).*(VmaxMat>1.05)) ;
-Vg_inI = VmaxMat + INaN_outs + VNaN_outs; % remove high voltages and currents
-
+INaN_outs = 0./((ImaxMat<Ip).*(VmaxMat<Vp).*(VmaxMat>1.05)) ;
+Vg_inI = VmaxMat + INaN_outs; % remove high voltages and currents
+% NB The maximum voltage never drops below 1.05 due to the source on the
+% feeder, and so in addition to removing overvoltages, we also remove
+% values at 1.05 (which are not on the voltage or thermal limit). This is
+% required as OpenDSS does seem to allow us to choose Sgen at 
+% generators accurately at these high power ratings.
 Imn = (Vg_inI==max(Vg_inI));
 Imax_pwr = max(real(TotPwr(Imn)),[],2); % for each row, find the max power
-% PgenI = Pgenmat(Imn);
 
-
+% Find 2 bus voltages, currents, reactive powers:
 [S0,Sg,Sl,~,Iest_pu,P0,Q0] = pred_S0_pscc( PgenV, Sload, Z, V0, Vp  );
 Iest = Iest_pu*ibN;
-Iest_in = ((Iest<Ip).*(P0<Pp));
-%%
-% Results table
-TotPwr_maxV = max(Vmax_pwr);
-P0_mxPrm = max(P0);
-RR.Psub_prm = [TotPwr_maxV;P0_mxPrm];
 
-Pgen_prm_meas = Pgenmat(real(TotPwr)==TotPwr_maxV);
-Pgen_mxV = real(Sg(P0_mxPrm==P0) + Sload);
-RR.Pgen_prm = [Pgen_prm_meas;Pgen_mxV];
-
-TotPwr_maxI = Imax_pwr(end);
-Psub_hat_est = P0(find(Iest_in,1,'last'));
-RR.Psub_hat = [TotPwr_maxI;Psub_hat_est];
-
-Pgen_hat_meas = Pgenmat(real(TotPwr)==TotPwr_maxI);
-Pghat_est = lemma_1( Vp, Ip/ibN, V0, Z );
+%% Return results RR
+[Pghat_est,Psub_hat_est] = lemma_1( Vp, Ip/ibN, V0, Z );
+[Pgprm_est,Psub_prm_est] = theorem_1( Vp, V0, Z );
 Pgen_hat_est = Pghat_est + real(Sload);
-% Pgen_mxI = real(Sg(P0_mxI==P0) + Sload);
+Pgen_prm_est = Pgprm_est + real(Sload);
+
+Psub_hat_meas = Imax_pwr(end);
+Pgen_hat_meas = Pgenmat(real(TotPwr)==Psub_hat_meas);
+Psub_prm_meas = max(Vmax_pwr);
+Pgen_prm_meas = Pgenmat(real(TotPwr)==Psub_prm_meas);
+
+RR.Psub_hat = [Psub_hat_meas;Psub_hat_est];
 RR.Pgen_hat = [Pgen_hat_meas;Pgen_hat_est];
+RR.Psub_prm = [Psub_prm_meas;Psub_prm_est];
+RR.Pgen_prm = [Pgen_prm_meas;Pgen_prm_est];
 
+% Imax_mes = ImaxMat(real(TotPwr)==Psub_prm_meas);
+% P0_mxPrm = max(P0);
+% Imax_prd = Iest(P0_mxPrm==P0)*ibN;
+% RR.Imax = [Imax_mes;Imax_prd];
 
-Imax_mes = ImaxMat(real(TotPwr)==TotPwr_maxV);
-Imax_prd = Iest(P0_mxPrm==P0)*ibN;
-RR.Imax = [Imax_mes;Imax_prd];
-
-RR.FF = FF;
-
-RR.sbase = sb;
-RR.Z = Z;
-RR.Zabs = abs(Z);
-RR.lz = lambdas(Z);
-RR.V0 = V0;
-RR.Ssc = Ssc; %kW
+RR.sbase = sb; RR.Z = Z; RR.Zabs = abs(Z); RR.lz = lambdas(Z); RR.V0 = V0;
+RR.Ssc = Ssc; %kW 
 RR.Sload = Sload; %in pu
 
-%% pl_options - to look through the data and compare methods etc.
+%% Plotting options (pl_options)
 figs = [];
 DAFS = 14; %default axis font size
 
@@ -177,13 +159,6 @@ if sum(ismember(pl_options,'imax')) || sum(ismember(pl_options,'0'))
     set(lgnd,'Interpreter','Latex');
     xlabel('$P_{gen}$ (pu)'); ylabel('$|I|$ (A)');
 end
-
-
-
-
-
-
-
 
 end
 

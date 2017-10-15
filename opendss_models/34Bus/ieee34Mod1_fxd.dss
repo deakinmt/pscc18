@@ -1,4 +1,7 @@
 ! Standard (Mod 1) model of IEEE 34 Bus Test Feeder
+! NOTE: this '..._fxd.dss' file is identical save
+! 1) setting the base frequency;
+! 2) the regulator taps are fixed.
 
 ! Note: Mod 2 better accounts for distributed load.
 

@@ -1,7 +1,9 @@
+% method_compatisons.m is a script that plots a comparison between the
+% marginal loss-induced power transmission limit and solution boundary and
+% unity power factor control (Figure 2)
+
+
 close all; clear all; clc;
-% cd('C:\Users\Matt\Documents\MATLAB\DPhil\psjul17_mtlb\psjul_figs');
-% fig_loc = 'C:\Users\Matt\Documents\DPhil\psjul17\figures';
-% cd('C:\Users\chri3793\Documents\MATLAB\DPhil\psjul17_mtlb\psjul_figs');
 fig_loc = 'C:\Users\Matt\Documents\DPhil\pscc18\pscc18_paper\figures';
 
 set(0,'defaulttextinterpreter','latex');
@@ -49,9 +51,8 @@ P0upf = Pgupf.*(1 - ((lr.*Pgupf)./(Vg.^2)));
 Pgupf = Pgupf./(1-(lz<lz_0)); %NaN if doesn't exist
 P0upf = P0upf./(1-(lz<lz_0));
 
-%load('datasets/loss_voltage_limit_SgSnresults.mat','Pg','Pn','Qg','Qn','RX','Z','theta');
 %% mgtt_1dcomparison
-fig_name = strcat(fig_loc,'\mgtt_1dcomparison');
+fig_name = [fig_loc,'\mgtt_1dcomparison'];
 fig = figure('Color','White','Position',fig_nompos); 
 
 semilogx(lz,Pgpr,'k--'); hold on;
@@ -72,4 +73,3 @@ set(lgnd,'Interpreter','latex','Location','SouthWest');
 
 % export_fig(gcf,fig_name);
 % export_fig(gcf,[fig_name,'.pdf'],'-dpdf');
-
