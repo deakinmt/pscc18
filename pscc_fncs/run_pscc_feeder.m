@@ -48,6 +48,7 @@ for i = 1:numel(Pg)
     DSSCircuit.Sample;
     
     AllBusVmagPu = DSSCircuit.AllBusVmagPu; 
+    AllBusVmagPu = DSSCircuit.AllBusVmagPu;
     VmaxMes(i) = max(AllBusVmagPu);
     
     [ I,~ ] = meas_pde_i( DSSCircuit ); %NB <= this is quite slow
@@ -158,6 +159,59 @@ if sum(ismember(pl_options,'imax')) || sum(ismember(pl_options,'0'))
     lgnd = legend('Max $I$, msrd.','$I_{g}$, estd.','$I_{+}$','$P_{g}''$, msrd.','$\hat{P}_{g}''$, msrd.','Location','NorthWest');
     set(lgnd,'Interpreter','Latex');
     xlabel('$P_{gen}$ (pu)'); ylabel('$|I|$ (A)');
+end
+
+%% THESIS Plotting options ;for nomenclature etc
+figsTss = [];
+if isfield(FF,'pltTss')
+    if sum(ismember(pl_options,'pgp0'))  || sum(ismember(pl_options,'0'))
+        figsTss = [figsTss;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];
+        plot(Pgenmat(Vmn),Vmax_pwr,'x-'); grid on; hold on;
+        plot(PgenV,P0);
+        axis equal;
+        axis([0 4 -1 1.5]);
+        xs = axis;
+        plot([1 1]*Pgen_prm_meas,xs(3:4),'k:');
+
+        xlabel('Generated power $P_{\mathrm{gen}}$, pu');
+        ylabel('Received power $P_{\mathrm{Rcv}}$, pu');
+        lgnd=legend('Load flow','Two bus','$P_{\mathrm{Snd,\,MPT}}$','Location','NorthWest');
+        set(lgnd,'interpreter','latex');
+
+    end
+    if sum(ismember(pl_options,'pgqgq0')) || sum(ismember(pl_options,'0'))
+        figsTss = [figsTss;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];
+        plot(Pgenmat(Vmn),Qgenmat(Vmn),'x-','Color',[0.3 0.3 0.3]); hold on; grid on;
+        plot(PgenV,imag(Sg + Sload),'k');
+        plot(Pgenmat(Vmn),imag(TotPwr(Vmn)),'x-','Color',[1.0 0.5 0.5]); hold on;
+        plot(PgenV,Q0,'r');
+
+%         lgnd = legend('$Q_{gen}$ msrd.','$Q_{gen}$ estd.','$Q_{comp}$ msrd.','$Q_{comp}$ estd.');
+        lgnd = legend('$Q_{\mathrm{Snd}}$, Load flow','$Q_{\mathrm{Snd}}$, Two bus','$Q_{\mathrm{Rcv}}$, Load flow','$Q_{\mathrm{Rcv}}$, Two bus');
+        set(lgnd,'Interpreter','Latex');
+        xlabel('Generated power $P_{\mathrm{gen}}$, pu'); ylabel('Reactive power $Q_{(\cdot)}$, pu'); axis equal;
+    end
+    if sum(ismember(pl_options,'imax')) || sum(ismember(pl_options,'0'))
+        figsTss = [figsTss;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];%
+        plot(Pgenmat(Vmn),ImaxMat(Vmn),'x-'); grid on; hold on;
+        plot(PgenV,Iest); grid on; hold on;
+
+        xs = axis;
+        plot(xs(1:2),[1 1]*FF.Ip,'k--');
+        plot([1 1]*Pgen_prm_meas,xs(3:4),'k:');
+        plot([1 1]*Pgen_hat_meas,xs(3:4),'k-.');
+        lgnd = legend('Max $I$, Load flow','$I_{\mathrm{Snd}}$, Two bus','Max current $I_{+}$','$P_{\mathrm{gen,\,MPT}}$, Load flow','$P_{\mathrm{gen,\,Imx}}$, Load flow','Location','NorthWest');
+        set(lgnd,'Interpreter','Latex');
+        xlabel('Generated power $P_{\mathrm{gen}}$, pu'); 
+        ylabel('Current magnitude $|I|$, A');
+    end
+    fig_loc_tss = 'C:\Users\Matt\Documents\DPhil\thesis\c3tech1\c3figures\';
+    for i = 1:numel(pl_options)
+        figname = [fig_loc_tss,'34bus_',pl_options{i},'_tss'];
+        export_fig(figsTss(i),figname);
+        export_fig(figsTss(i),[figname,'.pdf']);
+    end
+    close all;
 end
 
 end
