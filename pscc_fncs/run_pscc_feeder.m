@@ -163,6 +163,8 @@ end
 
 %% THESIS Plotting options ;for nomenclature etc
 figsTss = [];
+lgFntSze = 13;
+DAFS = 14; %default axis font size
 if isfield(FF,'pltTss')
     if sum(ismember(pl_options,'pgp0'))  || sum(ismember(pl_options,'0'))
         figsTss = [figsTss;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];
@@ -175,8 +177,10 @@ if isfield(FF,'pltTss')
 
         xlabel('Generated power $P_{\mathrm{gen}}$, pu');
         ylabel('Received power $P_{\mathrm{Rcv}}$, pu');
-        lgnd=legend('Load flow','Two bus','$P_{\mathrm{Snd,\,MPT}}$','Location','NorthWest');
-        set(lgnd,'interpreter','latex');
+%         lgnd=legend('Load flow','Two bus','$P_{\mathrm{Snd,\,MPT}}$','Location','NorthWest');
+%         lgnd=legend('Load flow','Two-Bus','$P_{\mathrm{Snd,\,MPT}}$','Location','NorthWest');
+        lgnd=legend('Load flow','Two-Bus','$P_{\mathrm{Snd,\,MPT}}$','Location','NorthWest');
+        set(lgnd,'interpreter','latex','fontsize',lgFntSze);
 
     end
     if sum(ismember(pl_options,'pgqgq0')) || sum(ismember(pl_options,'0'))
@@ -185,34 +189,38 @@ if isfield(FF,'pltTss')
         plot(PgenV,imag(Sg + Sload),'k');
         plot(Pgenmat(Vmn),imag(TotPwr(Vmn)),'x-','Color',[1.0 0.5 0.5]); hold on;
         plot(PgenV,Q0,'r');
+        axis([-1.5,5.8,-3.5,2.2])
 
 %         lgnd = legend('$Q_{gen}$ msrd.','$Q_{gen}$ estd.','$Q_{comp}$ msrd.','$Q_{comp}$ estd.');
-        lgnd = legend('$Q_{\mathrm{Snd}}$, Load flow','$Q_{\mathrm{Snd}}$, Two bus','$Q_{\mathrm{Rcv}}$, Load flow','$Q_{\mathrm{Rcv}}$, Two bus');
-        set(lgnd,'Interpreter','Latex');
+        lgnd = legend('$Q_{\mathrm{Snd}}$, Load flow','$Q_{\mathrm{Snd}}$, Two-Bus','$Q_{\mathrm{Rcv}}$, Load flow','$Q_{\mathrm{Rcv}}$, Two-Bus');
+        set(lgnd,'Interpreter','Latex','fontsize',lgFntSze);
         xlabel('Generated power $P_{\mathrm{gen}}$, pu'); ylabel('Reactive power $Q_{(\cdot)}$, pu'); axis equal;
     end
     if sum(ismember(pl_options,'imax')) || sum(ismember(pl_options,'0'))
         figsTss = [figsTss;figure('Color','White','Position',fig_nompos,'defaultaxesfontsize',DAFS,'defaulttextinterpreter','latex')];%
         plot(Pgenmat(Vmn),ImaxMat(Vmn),'x-'); grid on; hold on;
         plot(PgenV,Iest); grid on; hold on;
-
+        
+        xs = axis;
+        axis(xs + [0,0,0,50])
         xs = axis;
         plot(xs(1:2),[1 1]*FF.Ip,'k--');
         plot([1 1]*Pgen_prm_meas,xs(3:4),'k:');
         plot([1 1]*Pgen_hat_meas,xs(3:4),'k-.');
-        lgnd = legend('Max $I$, Load flow','$I_{\mathrm{Snd}}$, Two bus','Max current $I_{+}$','$P_{\mathrm{gen,\,MPT}}$, Load flow','$P_{\mathrm{gen,\,Imx}}$, Load flow','Location','NorthWest');
-        set(lgnd,'Interpreter','Latex');
+%         lgnd = legend('Max $I$, Load flow','$I_{\mathrm{Snd}}$, Two bus','Max current $I_{+}$','$P_{\mathrm{gen,\,MPT}}$, Load flow','$P_{\mathrm{gen,\,Imx}}$, Load flow','Location','NorthWest');
+        lgnd = legend('Max $I$, Load flow','$I_{\mathrm{Snd}}$, Two-Bus','Max current $I_{+}$','$P_{\mathrm{gen,\,MPT}}$, Load flow','$P_{\mathrm{gen,\,Imx}}$, Load flow','Location','NorthWest');
+        set(lgnd,'Interpreter','Latex','fontsize',lgFntSze);
         xlabel('Generated power $P_{\mathrm{gen}}$, pu'); 
         ylabel('Current magnitude $|I|$, A');
     end
     fig_loc_tss = 'C:\Users\Matt\Documents\DPhil\thesis\c3tech1\c3figures\';
     for i = 1:numel(pl_options)
         figname = [fig_loc_tss,'34bus_',pl_options{i},'_tss'];
-        export_fig(figsTss(i),figname);
         export_fig(figsTss(i),[figname,'.pdf']);
     end
     close all;
 end
 
+%%
 end
 

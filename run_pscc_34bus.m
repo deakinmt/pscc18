@@ -60,6 +60,9 @@ F.pg_ssc = linspace(1e-4,0.2,80);
 F.qg_ssc = linspace(-0.4,0.03,400);
 pl_options={'pgp0','pgqgq0','imax'}; %NB the order DOES matter!
 %%
+% Warning: this is set up with a silly charade where you need to open this
+% and then set FF = F.
+FF = F
 [ ~,figs ] = run_pscc_feeder( F,pl_options );
 % for i = 1:numel(pl_options)
 %     figname = [fig_loc,'34bus_',pl_options{i}];
@@ -143,10 +146,11 @@ for i=1:4
 
     subplot(2,2,i)
     bar(rslt);
-    title(['Bus ',NUTs{i}]); grid on; 
-    lgnd = legend('Load flow','Two bus');
-    set(lgnd,'Interpreter','Latex');
-    
+    title(['Bus ',NUTs{i}]); grid on;
+    if i==1
+        lgnd = legend('OpenDSS','Two-Bus');
+        set(lgnd,'Interpreter','Latex','fontsize',13);
+    end
     Yticks = yticks; ytcks = cell(numel(yticks),1);
     for j = 1:numel(Yticks)
         ytcks{j} = num2str(Yticks(j));
@@ -158,8 +162,7 @@ for i=1:4
 %     axis([0.5 4.5 0 8.5])
 end
 
-% export_fig(fig,figname);
-% export_fig(fig,[figname,'.pdf']); close;
+export_fig(fig,[figname,'.pdf']); close;
 
 %% ERROR TABLE
 clear input; clc;
